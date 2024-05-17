@@ -1,0 +1,6 @@
+aenum==3.1.15
+chardet==5.2.0
+dictdumper==0.8.4.post2
+dpkt==1.9.8
+pypcapkit==1.3.1.post9
+tbtrim==0.3.1
