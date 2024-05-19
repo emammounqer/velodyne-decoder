@@ -4,6 +4,16 @@ DATA_BLOCK_SIZE = 100
 DATA_BLOCK_COUNT = 12
 DATA_BLOCK_OFFSET = 42
 DATA_BLOCK_INDEXES = [42, 142, 242, 342, 442, 542, 642, 742, 842, 942, 1042, 1142]
+GRANULARITY_MM = 4
+
+
+# TODO: remove this function
+def parse_packet_data_blocks(packet_data: bytes):
+    data_blocks = []
+    for i in DATA_BLOCK_INDEXES:
+        data_block = packet_data[i : i + DATA_BLOCK_SIZE]
+        data_blocks.append(parse_data_block(data_block))
+    return data_blocks
 
 
 def decode_azimuth(data_block: bytes) -> int:
@@ -27,9 +37,12 @@ def parse_data_block(data_block: bytes):
     return azimuth
 
 
-def parse_packet_data_blocks(packet_data: bytes):
-    data_blocks = []
-    for i in DATA_BLOCK_INDEXES:
-        data_block = packet_data[i : i + DATA_BLOCK_SIZE]
-        data_blocks.append(parse_data_block(data_block))
-    return data_blocks
+def parse_data_points(packet_data: bytes) -> list[tuple[int, int]]:
+    #  distance and one byte of calibrated reflectivity
+    data_points: list[tuple[int, int]] = []
+    for i in range(4, 100, 3):
+        data_point = packet_data[i : i + 3]
+        distance_uncalibrated_mm, reflectivity = struct.unpack("< H B", data_point)
+        data_points.append((distance_uncalibrated_mm * GRANULARITY_MM, reflectivity))
+
+    return data_points
