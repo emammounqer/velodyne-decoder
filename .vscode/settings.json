@@ -1,3 +1,4 @@
 {
-  "cSpell.words": ["dpkt", "pcapkit"]
+  "cSpell.words": ["dpkt", "pcapkit"],
+  "python.analysis.typeCheckingMode": "basic"
 }

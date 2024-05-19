@@ -33,6 +33,7 @@ def process_chunk(chunk):
                 print(f'UDP Packet: {src_ip}:{src_port} -> {dst_ip}:{dst_port} ')
                 print("\n ----------------- \n")
                 print(f'UDP Data: {udp_data}')
+                exit()
                 
     except (dpkt.dpkt.NeedData, dpkt.dpkt.UnpackError):
         pass  # Incomplete or corrupted packet
