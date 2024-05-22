@@ -7,3 +7,7 @@ def decode_position(packet_data: bytes):
     timestamp_bytes = packet_data[offset : offset + size]
     time = struct.unpack("<I", timestamp_bytes)[0]
     return time
+
+
+def parse_position_packet(packet_data: bytes):
+    return decode_position(packet_data)
