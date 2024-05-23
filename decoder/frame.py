@@ -1,6 +1,9 @@
-from decoder.packet_data import parse_packet_data_blocks
+from decoder.packet_data import parse_packet_data_blocks, PacketData
 from decoder.position_packet import parse_position_packet
 from typing import Generator, Iterable, Any
+
+
+type Frame = tuple[int, PacketData]
 
 
 def accumulate_frames(data_packets):
@@ -66,15 +69,16 @@ def frame_to_csv(frame, frame_index):
         f.write(csv)
 
 
-def packet_decoder(packets: Iterable[bytes]) -> Generator[Any, None, None]:
-    frame = []
-    previous_azimuth = -1
-    curr_azimuth = -1
-    diff_azimuth = 0
+def packets_decoder(packets: Iterable[bytes]) -> Generator[tuple[Frame | None, Any], None, None]:
+    frame: PacketData = []
+    curr_frame: int = 0
+    previous_azimuth: int = -1
+    curr_azimuth: int = -1
+    diff_azimuth: int = 0
 
     for packet in packets:
         if len(packet) == 1248:
-            data_blocks = parse_packet_data_blocks(packet)
+            data_blocks: PacketData = parse_packet_data_blocks(packet)
             curr_azimuth = data_blocks[0][1][0]
 
             # Check if the azimuth has wrapped around for next packet
@@ -84,7 +88,8 @@ def packet_decoder(packets: Iterable[bytes]) -> Generator[Any, None, None]:
                 diff_azimuth += curr_azimuth - previous_azimuth
 
             if diff_azimuth >= 36000:
-                yield (frame, None)
+                curr_frame += 1
+                yield ((curr_frame, frame), None)
                 frame = []
                 diff_azimuth = 0
 

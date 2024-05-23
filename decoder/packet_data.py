@@ -1,6 +1,8 @@
 import struct
-from decoder.data_block import parse_data_block
+from decoder.data_block import parse_data_block, DataBlock
 from decoder.const import DATA_BLOCK_OFFSET, DATA_BLOCK_SIZE
+
+type PacketData = list[tuple[int, DataBlock]]
 
 
 def packet_to_csv(packet_data: bytes):
@@ -32,7 +34,7 @@ def decode_exact_time_stamp(packet_data: bytes):
 
 def parse_packet_data_blocks(
     packet_data: bytes,
-):
+) -> PacketData:
     """
     Parse the data blocks from the packet data.
 
@@ -46,7 +48,7 @@ def parse_packet_data_blocks(
         data_blocks[i][1][1][2] = reflectivity
 
     """
-    data_blocks: list[tuple[int, tuple[int, list[tuple[int, int, int]]]]] = []
+    data_blocks: PacketData = []
     data_block_index = 0
 
     for data_block_offset in DATA_BLOCK_OFFSET:

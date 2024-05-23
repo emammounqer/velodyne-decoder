@@ -1,8 +1,11 @@
 import struct
 from decoder.const import GRANULARITY_MM
 
+type DataPoint = tuple[int, int, int]
+type DataBlock = tuple[int, list[DataPoint]]
 
-def parse_data_block(data_block: bytes):
+
+def parse_data_block(data_block: bytes) -> DataBlock:
     """
     angle in hundredths of a degree
 
@@ -26,7 +29,7 @@ def decode_azimuth(data_block: bytes) -> int:
     return azimuth
 
 
-def parse_data_points(packet_data: bytes) -> list[tuple[int, int, int]]:
+def parse_data_points(packet_data: bytes) -> list[DataPoint]:
     """
     Parse the data points from the packet data
 
@@ -36,7 +39,7 @@ def parse_data_points(packet_data: bytes) -> list[tuple[int, int, int]]:
     Returns:
         list[tuple[int, int, int]]: The data points (laser_id, distance, reflectivity)
     """
-    data_points: list[tuple[int, int, int]] = []
+    data_points: list[DataPoint] = []
     laser_id = 0
     for i in range(4, 100, 3):
         distance_uncalibrated_mm, reflectivity = struct.unpack_from("< H B", packet_data, i)
