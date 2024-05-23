@@ -1,9 +1,10 @@
 import struct
 from typing import Generator
-from pcapkit import extract, Frame, Ethernet
+from pcapkit import extract, Ethernet
 from decoder.time_stamp import get_time_stamp
 from decoder.packet_data import decode_factory, decode_time_stamp
 from decoder.frame import packets_decoder, frame_to_csv
+import time
 
 
 def parse_payload(payload: Ethernet):
@@ -25,7 +26,9 @@ def get_packet_generator() -> Generator[bytes, None, None]:
 
 
 if __name__ == "__main__":
-    packets = get_packet_generator()
+    packets = list(get_packet_generator())
+    start_time = time.time()
+
     decoded_packets = packets_decoder(packets)
 
     frame_num = 0
@@ -33,7 +36,10 @@ if __name__ == "__main__":
     for frame, position in decoded_packets:
         if frame:
             frame_num += 1
+            frame_to_csv(frame)
             print("frame: ", frame_num)
         elif position:
             position_num += 1
-            print("position: ", position_num)
+
+    print("frame_num: ", frame_num)
+    print("time: ", time.time() - start_time)

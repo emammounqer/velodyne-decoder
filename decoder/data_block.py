@@ -1,11 +1,21 @@
 import struct
 from decoder.const import GRANULARITY_MM
-
-type DataPoint = tuple[int, int, int]
-type DataBlock = tuple[int, list[DataPoint]]
+from typing import NamedTuple
 
 
-def parse_data_block(data_block: bytes) -> DataBlock:
+class Point(NamedTuple):
+    laser_id: int
+    distance: int
+    reflectivity: int
+
+
+class DataBlock(NamedTuple):
+    id: int
+    azimuth: int
+    data_points: list[Point]
+
+
+def parse_data_block(data_block: bytes, id: int = -1) -> DataBlock:
     """
     angle in hundredths of a degree
 
@@ -19,9 +29,9 @@ def parse_data_block(data_block: bytes) -> DataBlock:
 
     azimuth = decode_azimuth(data_block)
     data_points = parse_data_points(data_block)
-
+    data = DataBlock(id, azimuth, data_points)
     # TODO:  azimuth should be between 0 to 35999
-    return azimuth, data_points
+    return data
 
 
 def decode_azimuth(data_block: bytes) -> int:
@@ -29,7 +39,7 @@ def decode_azimuth(data_block: bytes) -> int:
     return azimuth
 
 
-def parse_data_points(packet_data: bytes) -> list[DataPoint]:
+def parse_data_points(packet_data: bytes) -> list[Point]:
     """
     Parse the data points from the packet data
 
@@ -39,11 +49,12 @@ def parse_data_points(packet_data: bytes) -> list[DataPoint]:
     Returns:
         list[tuple[int, int, int]]: The data points (laser_id, distance, reflectivity)
     """
-    data_points: list[DataPoint] = []
+    data_points: list[Point] = []
     laser_id = 0
     for i in range(4, 100, 3):
         distance_uncalibrated_mm, reflectivity = struct.unpack_from("< H B", packet_data, i)
-        data_points.append((laser_id, distance_uncalibrated_mm * GRANULARITY_MM, reflectivity))
+        point = Point(laser_id, distance_uncalibrated_mm * GRANULARITY_MM, reflectivity)
+        data_points.append(point)
         laser_id += 1
 
     return data_points
