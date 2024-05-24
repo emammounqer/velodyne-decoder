@@ -1,7 +1,6 @@
 import struct
 from typing import Generator
 from pcapkit import extract, Ethernet
-from decoder.time_stamp import get_time_stamp
 from decoder.packet_data import decode_factory, decode_time_stamp
 from decoder.frame import packets_decoder, frame_to_csv
 import time
@@ -39,6 +38,7 @@ if __name__ == "__main__":
             frame_num += 1
             frame_to_csv(frame)
             print("frame: ", frame_num)
+            break
         elif position:
             position_num += 1
 

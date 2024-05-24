@@ -1,12 +1,12 @@
 from decoder.data_block import DataBlock
-from decoder.packet_data import parse_packet_data_blocks
+from decoder.packet_data import parse_packet_data, PacketData
 from decoder.position_packet import parse_position_packet
 from typing import Generator, Iterable, Any, NamedTuple
 
 
 class Frame(NamedTuple):
     id: int
-    data: list[DataBlock]
+    data: list[PacketData]
 
 
 def accumulate_frames(data_packets):
@@ -14,15 +14,15 @@ def accumulate_frames(data_packets):
     previous_azimuth = -1
 
     for packet in data_packets:
-        data_blocks = parse_packet_data_blocks(packet)
+        data_blocks = parse_packet_data(packet)
 
-        if previous_azimuth != -1 and data_blocks[1][0] < previous_azimuth:
+        if previous_azimuth != -1 and data_blocks.data_blocks[1][0] < previous_azimuth:
             # Azimuth wrapped around, indicating a new frame
             yield frame
             frame = []
 
         frame.extend(data_blocks)
-        previous_azimuth = data_blocks[1][0]
+        previous_azimuth = data_blocks.data_blocks[1][0]
 
     if frame:
         yield frame
@@ -40,8 +40,8 @@ def frame_generator():
         try:
             if not data_packet:
                 continue
-            data_blocks = parse_packet_data_blocks(data_packet)
-            curr_azimuth = data_blocks[0].azimuth
+            data_blocks = parse_packet_data(data_packet)
+            curr_azimuth = data_blocks.data_blocks[0].azimuth
         except ValueError:
             print("Invalid data packet")
             continue
@@ -61,17 +61,18 @@ def frame_generator():
 
 
 def frame_to_csv(frame: Frame):
-    csv = "data_block_index, azimuth, laser_id ,distance, reflectivity\n"
-    for data_block in frame.data:
-        for data_point in data_block.data_points:
-            csv += f"{data_block.id, data_block.azimuth, data_point.laser_id, data_point.distance, data_point.reflectivity}\n"
+    csv = "data_block_index,block_azimuth point_azimuth, laser_id ,distance, reflectivity, time_stamp, vertical_angle\n"
+    for packet in frame.data:
+        for data_block in packet.data_blocks:
+            for data_point in data_block.data_points:
+                csv += f"{data_block.block_index,data_block.azimuth, data_point.azimuth, data_point.laser_id, data_point.distance, data_point.reflectivity, data_point.timestamp, data_point.vertical_angle}\n"
 
     with open(f"out/frames/data{frame.id}.csv", "w") as f:
         f.write(csv)
 
 
 def packets_decoder(packets: Iterable[bytes]) -> Generator[tuple[Frame | None, Any], None, None]:
-    frame: list[DataBlock] = []
+    frame: list[PacketData] = []
     curr_frame_num: int = 0
     previous_azimuth: int = -1
     curr_azimuth: int = -1
@@ -79,8 +80,8 @@ def packets_decoder(packets: Iterable[bytes]) -> Generator[tuple[Frame | None, A
 
     for packet in packets:
         if len(packet) == 1248:
-            data_blocks: list[DataBlock] = parse_packet_data_blocks(packet)
-            curr_azimuth = data_blocks[0].azimuth
+            data_blocks = parse_packet_data(packet)
+            curr_azimuth = data_blocks.data_blocks[0].azimuth
 
             # Check if the azimuth has wrapped around for next packet
             if previous_azimuth > -1 and curr_azimuth < previous_azimuth:
@@ -95,7 +96,7 @@ def packets_decoder(packets: Iterable[bytes]) -> Generator[tuple[Frame | None, A
                 frame = []
                 diff_azimuth = 0
 
-            frame.extend(data_blocks)
+            frame.append(data_blocks)
             previous_azimuth = curr_azimuth
 
         elif len(packet) == 554:

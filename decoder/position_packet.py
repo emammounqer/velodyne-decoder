@@ -49,7 +49,6 @@ def parse_NMEA_data(packet_data: bytes) -> NMEAData | None:
 
 
 def parse_nmea(sentence: str) -> Optional[NMEAData]:
-    # ^\$GPRMC,(?P<time>\d{6}(\.\d+)?),(?P<status>[AV]),(?P<latitude>\d{2}\d{2}\.\d+),(?P<lat_dir>[NS]),(?P<longitude>\d{3}\d{2}\.\d+),(?P<long_dir>[EW]),(?P<speed>\d+\.\d+)?,(?P<track_angle>\d+\.\d+)?,(?P<date>\d{6}),(?P<mag_var>\d+\.\d+)?,(?P<mag_var_dir>[EW])?,(?P<fix_mode>[ADEGNS]?)\*(?P<checksum>[A-F0-9]{2})
     pattern = re.compile(
         r"^\$GPRMC,"
         r"(?P<time>\d{6}(\.\d+)?),"
