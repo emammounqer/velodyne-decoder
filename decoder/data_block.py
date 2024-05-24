@@ -30,7 +30,6 @@ def parse_data_block(data_block: bytes, id: int = -1) -> DataBlock:
     azimuth = decode_azimuth(data_block)
     data_points = parse_data_points(data_block)
     data = DataBlock(id, azimuth, data_points)
-    # TODO:  azimuth should be between 0 to 35999
     return data
 
 

@@ -20,15 +20,16 @@ def parse_position_packet(payload: Ethernet):
 
 
 def get_packet_generator() -> Generator[bytes, None, None]:
-    with extract("data\\t1.pcap", store=False, nofile=True, auto=False, format="json") as packets:
+    with extract(
+        "data\\VLP-32c_Single.pcap", store=False, nofile=True, auto=False, format="json"
+    ) as packets:
         for packet in packets:
             yield packet.payload.data
 
 
 if __name__ == "__main__":
-    packets = list(get_packet_generator())
+    packets = get_packet_generator()
     start_time = time.time()
-
     decoded_packets = packets_decoder(packets)
 
     frame_num = 0
