@@ -6,6 +6,13 @@ from decoder.const import DATA_BLOCK_OFFSET, DATA_BLOCK_SIZE
 
 class PacketData(NamedTuple):
     data_blocks: list[DataBlock]
+    """
+    First, in Dual Return Mode the sensor sends a pair of data blocks for each azimuth angle firing. The odd numbered blocks
+    (1, 3, ..., 9, 11) contain either the strongest or second-strongest return and the even numbered blocks (0, 2, ..., 8, 10) 
+    contain the last return. \n
+    If the strongest return is also the last return, then the second-strongest return is provided. If only one return was detected,
+    the data will be identical in the even|odd block pairs (0|1, 2|3, 4|5, 6|7, 8|9, 10|11).
+    """
     time_stamp: int
     return_mode: int
     """
