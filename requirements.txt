@@ -1,6 +1,14 @@
 aenum==3.1.15
 chardet==5.2.0
+colorama==0.4.6
 dictdumper==0.8.4.post2
 dpkt==1.9.8
+iniconfig==2.0.0
+llvmlite==0.42.0
+numba==0.59.1
+numpy==1.26.4
+packaging==24.0
+pluggy==1.5.0
 pypcapkit==1.3.1.post9
+pytest==8.2.1
 tbtrim==0.3.1

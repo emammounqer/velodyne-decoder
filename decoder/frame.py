@@ -61,11 +61,11 @@ def frame_generator():
 
 
 def frame_to_csv(frame: Frame):
-    csv = "data_block_index,block_azimuth point_azimuth, laser_id ,distance, reflectivity, time_stamp, vertical_angle\n"
+    csv = "data_block_index,block_azimuth, point_azimuth, laser_id ,distance, reflectivity, time_stamp, vertical_angle,x ,y ,z\n"
     for packet in frame.data:
         for data_block in packet.data_blocks:
             for data_point in data_block.data_points:
-                csv += f"{data_block.block_index,data_block.azimuth, data_point.azimuth, data_point.laser_id, data_point.distance, data_point.reflectivity, data_point.timestamp, data_point.vertical_angle}\n"
+                csv += f"{data_block.block_index,data_block.azimuth, data_point.azimuth, data_point.laser_id, data_point.distance, data_point.reflectivity, data_point.timestamp, data_point.vertical_angle, data_point.x, data_point.y, data_point.z}\n"
 
     with open(f"out/frames/data{frame.id}.csv", "w") as f:
         f.write(csv)

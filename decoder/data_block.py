@@ -4,8 +4,11 @@ from decoder.const import (
     DATA_BLOCK_OFFSET,
     FULL_FIRING_CYCLE_TIME,
     SINGLE_FIRING_TIME,
+    laser_data,
 )
 from typing import NamedTuple
+import math
+from numba import njit
 
 
 class Point(NamedTuple):
@@ -14,85 +17,19 @@ class Point(NamedTuple):
     reflectivity: int
     timestamp: float
     azimuth: float
+    """Azimuth angle in degrees"""
     vertical_angle: float
+    """Vertical angle in degrees"""
+    x: float
+    y: float
+    z: float
 
 
 class DataBlock(NamedTuple):
     block_index: int
     azimuth: int
+    """Azimuth angle in hundredths of degrees"""
     data_points: list[Point]
-
-
-packet_order_laser_id_map: dict[int, int] = {
-    1: 31,
-    2: 13,
-    3: 1,
-    4: 17,
-    5: 29,
-    6: 9,
-    7: 3,
-    8: 21,
-    9: 27,
-    10: 12,
-    11: 5,
-    12: 16,
-    13: 25,
-    14: 8,
-    15: 7,
-    16: 20,
-    17: 22,
-    18: 2,
-    19: 10,
-    20: 28,
-    21: 23,
-    22: 6,
-    23: 11,
-    24: 24,
-    25: 18,
-    26: 0,
-    27: 14,
-    28: 30,
-    29: 19,
-    30: 4,
-    31: 15,
-    32: 26,
-}
-
-# Laser ID Elevation Angle (°) Azimuth Offset (δ)
-laser_data = [
-    (0, -25, 1.4),
-    (1, -1, -4.2),
-    (2, -1.667, 1.4),
-    (3, -15.639, -1.4),
-    (4, -11.31, 1.4),
-    (5, 0, -1.4),
-    (6, -0.667, 4.2),
-    (7, -8.843, -1.4),
-    (8, -7.254, 1.4),
-    (9, 0.333, -4.2),
-    (10, -0.333, 1.4),
-    (11, -6.148, -1.4),
-    (12, -5.333, 4.2),
-    (13, 1.333, -1.4),
-    (14, 0.667, 4.2),
-    (15, -4, -1.4),
-    (16, -4.667, 1.4),
-    (17, 1.667, -4.2),
-    (18, 1, 1.4),
-    (19, -3.667, -4.2),
-    (20, -3.333, 4.2),
-    (21, 3.333, -1.4),
-    (22, 2.333, 1.4),
-    (23, -2.667, -1.4),
-    (24, -3, 1.4),
-    (25, 7, -1.4),
-    (26, 4.667, 1.4),
-    (27, -2.333, -4.2),
-    (28, -2, 4.2),
-    (29, 15, -1.4),
-    (30, 10.333, 1.4),
-    (31, -1.333, -1.4),
-]
 
 
 def parse_data_block(
@@ -123,23 +60,31 @@ def parse_data_points(
             order_in_packet += 1
             continue
 
+        distance = distance_uncalibrated_mm * GRANULARITY_MM
         offset_index = block_index // 2 if return_mode == 0x39 else block_index
         offset = offset_index * FULL_FIRING_CYCLE_TIME + order_in_packet // 2 * SINGLE_FIRING_TIME
         point_time_stamp = offset + time_stamp
 
-        point_azimuth = azimuth + (laser_data[order_in_packet][2] * 100)
-        if point_azimuth >= 36000:
-            point_azimuth -= 36000
+        point_azimuth = azimuth / 100 + (laser_data[order_in_packet][2])
+        if point_azimuth >= 360:
+            point_azimuth -= 360
         if point_azimuth < 0:
-            point_azimuth += 36000
+            point_azimuth += 360
+
+        vertical_angle = laser_data[order_in_packet][1]
+
+        (x, y, z) = get_point_coordinates(distance, point_azimuth, vertical_angle)
 
         point = Point(
             order_in_packet,
-            distance_uncalibrated_mm * GRANULARITY_MM,
+            distance,
             reflectivity,
             point_time_stamp,
             point_azimuth,
-            laser_data[order_in_packet][1],
+            vertical_angle,
+            x,
+            y,
+            z,
         )
         data_points.append(point)
         order_in_packet += 1
@@ -178,3 +123,13 @@ def adjust_azimuth_and_interpolate(curr_block_azimuth: float, next_block_azimuth
         K += 2
 
     return Precision_Azimuth
+
+
+@njit
+def get_point_coordinates(
+    distance: float, azimuth: float, vertical_angle: float
+) -> tuple[float, float, float]:
+    x = distance * math.cos(math.radians(vertical_angle)) * math.sin(math.radians(azimuth))
+    y = distance * math.cos(math.radians(vertical_angle)) * math.cos(math.radians(azimuth))
+    z = distance * math.sin(math.radians(vertical_angle))
+    return x, y, z

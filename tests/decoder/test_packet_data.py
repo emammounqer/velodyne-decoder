@@ -2,7 +2,6 @@ import pytest
 from decoder.packet_data import (
     decode_factory,
     decode_time_stamp,
-    decode_exact_time_stamp,
     packet_to_csv,
     parse_packet_data_blocks,
 )
@@ -12,7 +11,7 @@ packet_data_1 = b"\xff\xff\xff\xff\xff\xff`v\x88\x00\x00\x00\x08\x00E\x00\x04\xd
 
 
 def test_parse_packet_data_blocks():
-    data_blocks = parse_packet_data_blocks(packet_data_1)
+    data_blocks = parse_packet_data_blocks(packet_data_1, -1, -1, -1)
     assert len(data_blocks) == 12
 
 
@@ -25,12 +24,6 @@ def test_decode_factory():
 def test_decode_time_stamp():
     timestamp_not_exact = decode_time_stamp(packet_data_1)
     assert timestamp_not_exact == 291919382
-
-
-@pytest.mark.skip(reason="Not implemented")
-def test_decode_exact_time_stamp():
-    timestamp_exact = decode_exact_time_stamp(packet_data_1)
-    assert timestamp_exact == 291919437
 
 
 def test_packet_to_csv():
