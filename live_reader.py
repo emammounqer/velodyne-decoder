@@ -1,5 +1,8 @@
 import socket
 from decoder.frame import packets_decoder
+from scapy.layers.l2 import Ether
+from scapy.layers.inet import IP, UDP
+from scapy.utils import PcapWriter
 
 
 def read_live_data():
@@ -9,8 +12,17 @@ def read_live_data():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Internet  # UDP
     sock.bind((UDP_IP, UDP_PORT))
 
+    pcap_writer = PcapWriter("out\\output.pcap", append=True, sync=True)
+
     while True:
         data, addr = sock.recvfrom(1248)  # buffer size is 1024 bytes
+        packet = (
+            Ether()
+            / IP(dst=UDP_IP, src=addr[0])
+            / UDP(dport=UDP_PORT, sport=addr[1])
+            / data
+        )
+        pcap_writer.write(packet)
         yield data
 
 
