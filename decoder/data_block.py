@@ -13,7 +13,7 @@ from numba import njit
 
 class Point(NamedTuple):
     laser_id: int
-    distance: int
+    distance: float
     reflectivity: int
     timestamp: float
     azimuth: float
@@ -23,18 +23,6 @@ class Point(NamedTuple):
     x: float
     y: float
     z: float
-
-    def distance_m(self) -> float:
-        return self.distance / 1000
-
-    def distance_m_x(self) -> float:
-        # TODO: Implement this
-        return self.distance / 1000
-
-    def distance_m_y(self) -> float:
-        # TODO: Implement this
-        return self.distance / 1000
-
 
 class DataBlock(NamedTuple):
     block_index: int
@@ -81,7 +69,7 @@ def parse_data_points(
             order_in_packet += 1
             continue
 
-        distance = distance_uncalibrated_mm * GRANULARITY_MM
+        distance = distance_uncalibrated_mm * GRANULARITY_MM / 1000
         offset_index = block_index // 2 if return_mode == 0x39 else block_index
         offset = (
             offset_index * FULL_FIRING_CYCLE_TIME
@@ -168,4 +156,4 @@ def get_point_coordinates(
         * math.cos(math.radians(azimuth))
     )
     z = distance * math.sin(math.radians(vertical_angle))
-    return x, y, z
+    return x  , y , z  

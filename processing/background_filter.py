@@ -3,7 +3,7 @@ from itertools import islice
 import numpy as np
 import pandas as pd
 import os
-from decoder.frame import Frame
+from decoder.frame import Frame, frame_to_csv
 
 
 def background_filter(frames: Iterable[Frame]):
@@ -30,8 +30,8 @@ def background_filter(frames: Iterable[Frame]):
 
 
 def generate_background(frames: Iterable[Frame], background_points, z_th, iou, dist_th):
-    li: list[pd.DataFrame] = []
-    for _, frame in enumerate(frames):
+    for frame in frames:
+        frame_to_csv(frame)
         df = generate_df_from_frame(frame)
         df = df[(df["z"] > z_th[0]) & (df["z"] < z_th[1]) & (df["distance_m"] < iou)]
         df["azimuth"] = df["azimuth"] / 100 // 0.20
@@ -39,9 +39,7 @@ def generate_background(frames: Iterable[Frame], background_points, z_th, iou, d
         df["distance_m_y"] = df["distance_m_y"].sub(df["distance_m_x"], fill_value=1)
         drop_index = df[df["distance_m_y"].abs() < dist_th].index
         df = df.drop(drop_index)
-        df = df.drop(["distance_m_y"], axis=1)
-        li.append(df)
-    return li
+        yield df
 
 
 def generate_background_points(
@@ -52,7 +50,8 @@ def generate_background_points(
 ):
 
     li = []
-    for frame in islice(frames, 3000):
+    for frame in islice(frames, 100):
+        print(frame.id)
         df = generate_df_from_frame(frame)
         df = df[(df["z"] > z_th[0]) & (df["z"] < z_th[1]) & (df["distance_m"] < iou)]
         df["azimuth"] = df["azimuth"] / 100 // 0.2
@@ -80,13 +79,13 @@ def generate_df_from_frame(frame: Frame):
                 data.append(
                     {
                         "z": data_point.z,
+                        "x": data_point.x,
+                        "y": data_point.y,
                         "laser_id": data_point.laser_id,
                         "azimuth": data_point.azimuth,
-                        "distance_m": data_point.distance_m(),
+                        "distance_m": data_point.distance,
                         "reflectivity": data_point.reflectivity,
                         "time_stamp": packet.time_stamp,
-                        "distance_m_x": data_point.distance_m_x(),
-                        "distance_m_y": data_point.distance_m_y(),
                     }
                 )
     df = pd.DataFrame(data)
