@@ -37,7 +37,7 @@ This Python application reads LiDAR data and outputs both a PCAP file and a CSV 
    pip install -r requirements.txt
    ```
 
-4. Create out folder
+4. Create `out` folder
 
     ```bash
     mkdir out
