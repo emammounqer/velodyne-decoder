@@ -45,8 +45,6 @@ This Python application reads LiDAR data and outputs both a PCAP file and a CSV 
 
 ## Usage
 
-<!-- I Want to say that you might need to change the ip in the live_reader file to 0.0.0.0 to listen to all  -->
-
 To run the application, you need to have the LiDAR sensor connected to the computer. The application will read the data from the sensor and output the processed data to a PCAP file and a CSV file.
 
 Change the IP address in the `live_reader.py` file to the IP address of the LiDAR sensor. Or Change to `0.0.0.0` to Bind to all available interfaces
